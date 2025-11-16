@@ -15,6 +15,13 @@
       "when": 1762960072535,
       "tag": "0001_futuristic_ezekiel",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1763300317962,
+      "tag": "0002_early_talisman",
+      "breakpoints": true
     }
   ]
 }
