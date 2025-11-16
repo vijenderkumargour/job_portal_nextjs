@@ -30,25 +30,9 @@ import {
   RegisterUserWithConfirmDataType,
   registerUserWithConfirmSchema,
 } from "@/features/auth/auth.schema";
-
-// interface RegistrationFormData {
-//   name: string;
-//   userName: string;
-//   email: string;
-//   password: string;
-//   confirmPassword: string;
-//   role: "applicant" | "employer";
-// }
+import { useRouter } from "next/navigation";
 
 const Registration: React.FC = () => {
-  // const [formData, setFormData] = useState<RegistrationFormData>({
-  //   name: "",
-  //   userName: "",
-  //   email: "",
-  //   password: "",
-  //   confirmPassword: "",
-  //   role: "applicant",
-  // });
   const {
     register,
     handleSubmit,
@@ -59,42 +43,18 @@ const Registration: React.FC = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
-  // const handleInputChange = (name: string, value: string) => {
-  //   setFormData((prev) => ({
-  //     ...prev,
-  //     [name]: value,
-  //   }));
-  // };
-
-  // console.log(formData);
+  const router = useRouter();
 
   // const handleOnSubmit = async (e: FormEvent) => {
   const handleOnSubmit = async (data: RegisterUserWithConfirmDataType) => {
     try {
-      // const registrationData = {
-      //   name: formData.name.trim(),
-      //   userName: formData.userName.trim(),
-      //   email: formData.email.toLowerCase().trim(),
-      //   password: formData.password,
-      //   role: formData.role,
-      // };
-      // if (formData.password !== formData.confirmPassword) {
-      //   toast.error("Passwords do not match!");
-      //   return;
-      // }
-      // const result = await registerUserAction(registrationData);
       const result = await registerUserAction(data);
       if (result.status === "SUCCESS") {
+        if (data.role === "employer") router.push("/employer-dashboard");
+        else router.push("/dashboard");
+      }
+      if (result.status === "SUCCESS") {
         toast.success(result.message);
-        // setFormData({
-        //   name: "",
-        //   userName: "",
-        //   email: "",
-        //   password: "",
-        //   confirmPassword: "",
-        //   role: "applicant",
-        // });
       } else {
         toast.error(result.message);
       }
