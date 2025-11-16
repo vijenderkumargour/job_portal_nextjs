@@ -11,8 +11,10 @@ type CreateSessionData = {
   userId: number;
   userAgent: string;
   ip: string;
+  tx?: DbClient;
 };
 
+type DbClient = typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0];
 const generateSessionTokenId = () => {
   return crypto.randomBytes(32).toString("hex");
 };
@@ -26,10 +28,11 @@ const createUserSession = async ({
   userId,
   userAgent,
   ip,
+  tx = db,
 }: CreateSessionData) => {
   const hashedToken = crypto.createHash("sha-256").update(token).digest("hex");
 
-  const [result] = await db.insert(sessions).values({
+  const [result] = await tx.insert(sessions).values({
     id: hashedToken,
     userId,
     expiresAt: new Date(Date.now() + SESSION_LIFETIME * 1000),
@@ -40,7 +43,10 @@ const createUserSession = async ({
   return result;
 };
 
-export const createSessionAndSetCookies = async (userId: number) => {
+export const createSessionAndSetCookies = async (
+  userId: number,
+  tx: DbClient = db
+) => {
   const token = generateSessionTokenId();
   const ip = await getIPAddress();
   console.log("IP Address:", ip);
@@ -51,6 +57,7 @@ export const createSessionAndSetCookies = async (userId: number) => {
     userId: userId,
     userAgent: (await headersList).get("user-agent") || "",
     ip: ip,
+    tx,
   });
   const cookieStore = await cookies();
 
@@ -109,6 +116,6 @@ export const validateSessionAndGetUser = async (session: string) => {
   return user;
 };
 
-const invalidateSession = async (id: string) => {
+export const invalidateSession = async (id: string) => {
   await db.delete(sessions).where(eq(sessions.id, id));
 };

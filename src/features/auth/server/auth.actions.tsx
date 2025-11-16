@@ -1,11 +1,17 @@
 "use server";
 
 import db from "@/config/db";
-import { users } from "@/drizzle/schema";
+import { applicants, employers, users } from "@/drizzle/schema";
 import argon2 from "argon2";
 import { eq, or } from "drizzle-orm";
 import { RegisterUserData, registerUserSchema } from "../auth.schema";
-import { createSessionAndSetCookies } from "./use-cases/sessions";
+import {
+  createSessionAndSetCookies,
+  invalidateSession,
+} from "./use-cases/sessions";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import crypto from "crypto";
 
 export const registerUserAction = async (data: RegisterUserData) => {
   try {
@@ -32,11 +38,20 @@ export const registerUserAction = async (data: RegisterUserData) => {
 
     const hashPassword = await argon2.hash(password);
 
-    const [result] = await db
-      .insert(users)
-      .values({ name, userName, email, password: hashPassword, role });
+    await db.transaction(async (tx) => {
+      const [result] = await tx
+        .insert(users)
+        .values({ name, userName, email, password: hashPassword, role });
 
-    await createSessionAndSetCookies(result.insertId);
+      if (role === "applicant") {
+        await tx.insert(applicants).values({ id: result.insertId });
+      } else {
+        await tx.insert(employers).values({ id: result.insertId });
+      }
+
+      await createSessionAndSetCookies(result.insertId, tx);
+    });
+
     return {
       status: "SUCCESS",
       message: "Registration Completed Successfully",
@@ -75,6 +90,7 @@ export const loginUserAction = async (data: LoginData) => {
     return {
       status: "SUCCESS",
       message: "Login Successful",
+      role: user.role,
     };
   } catch (error) {
     return {
@@ -82,4 +98,23 @@ export const loginUserAction = async (data: LoginData) => {
       message: "Unknown Error Occurred! Please Try Again Later",
     };
   }
+};
+
+// logout user
+export const logoutUserAction = async () => {
+  const cookieStore = await cookies();
+  const session = cookieStore.get("session")?.value;
+
+  if (!session) return redirect("/login");
+  console.log(session);
+
+  const hashedToken = crypto
+    .createHash("sha-256")
+    .update(session)
+    .digest("hex");
+
+  await invalidateSession(hashedToken);
+  cookieStore.delete("session");
+
+  return redirect("/login");
 };
