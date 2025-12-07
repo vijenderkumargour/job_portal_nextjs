@@ -4,6 +4,7 @@ import db from "@/config/db";
 import { getCurrentUser } from "../../auth/server/auth.queries";
 import { employers } from "@/drizzle/schema";
 import { eq } from "drizzle-orm";
+import { EmployerProfileData } from "../employers.schema";
 
 const organizationTypeOptions = [
   "development",
@@ -27,7 +28,9 @@ interface IFormInput {
   teamSize: TeamSize;
 }
 
-export const updateEmployerProfileAction = async (data: IFormInput) => {
+export const updateEmployerProfileAction = async (
+  data: EmployerProfileData
+) => {
   try {
     const currentUser = await getCurrentUser();
     if (!currentUser || currentUser.role !== "employer") {
