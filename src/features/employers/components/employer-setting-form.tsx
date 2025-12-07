@@ -11,6 +11,7 @@ import {
   Calendar,
   FileText,
   Globe,
+  Loader,
   MapPin,
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
@@ -67,13 +68,33 @@ import { zodResolver } from "@hookform/resolvers/zod";
 //   teamSize: TeamSize;
 // }
 
-const EmployerSettingsForm = () => {
+// Partial<T> is a TypeScript utility type that takes an Interface or Type and makes all of its properties optional.
+// 1. Define the SHAPE of the props object
+interface Props {
+  initialData?: Partial<EmployerProfileData>; // Key: Type
+}
+
+// // 2. Use that shape
+// export const EmployerSettingsForm = ({ initialData }: Props) => {
+//   // ...
+// };
+
+const EmployerSettingsForm = ({ initialData }: Props) => {
   const {
     register,
     handleSubmit,
     control,
-    formState: { errors },
+    formState: { errors, isDirty, isSubmitting },
   } = useForm<EmployerProfileData>({
+    defaultValues: {
+      name: initialData?.name || "",
+      description: initialData?.description || "",
+      organizationType: initialData?.organizationType || undefined,
+      teamSize: initialData?.teamSize || undefined,
+      yearOfEstablishment: initialData?.yearOfEstablishment,
+      websiteUrl: initialData?.websiteUrl || "",
+      location: initialData?.location || "",
+    },
     resolver: zodResolver(employerProfileSchema),
   });
 
@@ -281,7 +302,18 @@ const EmployerSettingsForm = () => {
               </p>
             )}
           </div>
-          <Button type="submit">Save Changes</Button>
+          <div className="flex items-center gap-4 pt-4">
+            <Button type="submit">
+              {isSubmitting && <Loader className="w-4 h-4 animate-spin" />}
+              {isSubmitting ? "Saving Changes..." : "Save Changes"}
+            </Button>
+
+            {!isDirty && (
+              <p className="text-sm text-muted-foreground">
+                No changes to save
+              </p>
+            )}
+          </div>
         </form>
       </CardContent>
     </Card>

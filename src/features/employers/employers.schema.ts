@@ -31,6 +31,20 @@ export const teamSizes = [
   "1001+",
 ] as const;
 
+export function toOrganizationType(value: string | null | undefined) {
+  if (!value) return undefined;
+  return organizationTypes.includes(value as any)
+    ? (value as (typeof organizationTypes)[number])
+    : undefined;
+}
+
+export function toTeamSize(value: string | null | undefined) {
+  if (!value) return undefined;
+  return teamSizes.includes(value as any)
+    ? (value as (typeof teamSizes)[number])
+    : undefined;
+}
+
 export const employerProfileSchema = z.object({
   name: z
     .string()

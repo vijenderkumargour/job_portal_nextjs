@@ -7,6 +7,7 @@ export const getCurrentEmployerDetails = async () => {
   const currentUser = await getCurrentUser();
 
   if (!currentUser) return null;
+
   if (currentUser.role !== "employer") return null;
 
   const [employer] = await db
